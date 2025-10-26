@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use winit::{
-    application::ApplicationHandler, event::*, 
+    application::ApplicationHandler, 
+    event::*, 
     event_loop::{ActiveEventLoop, EventLoop}, 
     keyboard::{KeyCode, PhysicalKey}, 
     window::Window
