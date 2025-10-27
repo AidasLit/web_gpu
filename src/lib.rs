@@ -141,13 +141,13 @@ pub fn run() -> anyhow::Result<()> {
 }
 
 #[wasm_bindgen]
-extern "C" {
-    pub fn alert(s: &str);
+unsafe extern "C" {
+    pub unsafe fn alert(s: &str);
 }
 
 #[wasm_bindgen(start)]
 pub fn run_web() -> Result<(), wasm_bindgen::JsValue> {
-    alert(&format!("Hello, Aidas"));
+    unsafe { alert(&format!("Hello, Aidas")) };
 
     console_error_panic_hook::set_once();
     run().unwrap_throw();
