@@ -25,7 +25,7 @@ extern "C" {
 
 #[wasm_bindgen(start)]
 pub fn run_web() -> Result<(), wasm_bindgen::JsValue> {
-    alert("Hello, Aidas");
+    alert("Hello, welcome to WebGPU rendering. \nPlease make sure WebGPU is supported and enabled by the browser");
 
     console_error_panic_hook::set_once();
     run().unwrap_throw();

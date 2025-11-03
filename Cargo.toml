@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# TODO remove rlib as the app is purely for the web
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [profile.release]
 strip = true
