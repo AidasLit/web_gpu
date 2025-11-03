@@ -19,13 +19,13 @@ pub fn run() -> anyhow::Result<()> {
 }
 
 #[wasm_bindgen]
-unsafe extern "C" {
-    pub unsafe fn alert(s: &str);
+extern "C" {
+    fn alert(s: &str);
 }
 
 #[wasm_bindgen(start)]
 pub fn run_web() -> Result<(), wasm_bindgen::JsValue> {
-    unsafe { alert(&format!("Hello, Aidas")) };
+    alert("Hello, Aidas");
 
     console_error_panic_hook::set_once();
     run().unwrap_throw();
