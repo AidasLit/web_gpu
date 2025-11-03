@@ -1,2 +1,5 @@
-python -m http.server
-wasm-pack build --target web
+build the app for WebGPU:
+`wasm-pack build --target web`
+
+start a local server to host the app:
+`python -m http.server`
