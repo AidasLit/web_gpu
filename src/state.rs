@@ -1,17 +1,21 @@
-use std::{ops::Range, sync::Arc};
+use crate::vertex::{VERTICES, Vertex};
+
+use std::sync::Arc;
 
 use anyhow::Ok;
+use wgpu::util::DeviceExt;
 use winit::{event_loop::ActiveEventLoop, keyboard::KeyCode, window::Window};
 
 // This will store the state of our game
 pub struct State {
+    pub window: Arc<Window>,
     pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub is_surface_configured: bool,
     pub render_pipeline: wgpu::RenderPipeline,
-    pub window: Arc<Window>,
+    pub vertex_buffer: wgpu::Buffer,
 }
 
 impl State {
@@ -76,14 +80,16 @@ impl State {
                 bind_group_layouts: &[],
                 push_constant_ranges: &[],
             });
-        
+
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render Pipeline"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: Some("vertex_main"),
-                buffers: &[],
+                buffers: &[
+                    Vertex::desc(), // TODO try to use self.vertex_buffer::desc()
+                ],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
@@ -115,14 +121,21 @@ impl State {
             cache: None,
         });
 
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
         Ok(Self {
+            window,
             surface,
             device,
             queue,
             config,
             is_surface_configured: false,
             render_pipeline,
-            window,
+            vertex_buffer,
         })
     }
 
@@ -180,8 +193,9 @@ impl State {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        //render_pass.draw(0..3, 0..1);
-        render_pass.draw(Range{ start: 0, end: 3 }, Range{ start: 0, end: 1 });
+
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.draw(0..{ VERTICES.len() as u32 }, 0..1);
 
         // dropping render_pass to free the borrowed encoder
         drop(render_pass);
