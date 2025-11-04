@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
@@ -5,10 +7,36 @@ pub struct Vertex {
     color: [f32; 3],
 }
 
+enum Colours {
+    Red,
+    Green,
+    Blue,
+    DarkOrange,
+    DarkRose,
+    White,
+}
+
+const COLOUR_CODES : &[[f32; 3]; 6] = &[
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0],
+    [0.835, 0.176, 0.0],
+    [0.639, 0.007, 0.384],
+    [1.0, 1.0, 1.0],
+];
+
 pub const VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
-    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
+    Vertex { position: [0.5, 0.0, 0.0], color: COLOUR_CODES[Colours::White as usize] }, // D
+    Vertex { position: [-0.5, -0.5, 0.0], color: COLOUR_CODES[Colours::DarkRose as usize] }, // A
+    Vertex { position: [0.5, -0.5, 0.0], color: COLOUR_CODES[Colours::DarkRose as usize] }, // B
+
+    Vertex { position: [0.5, 0.0, 0.0], color: COLOUR_CODES[Colours::White as usize] }, // D
+    Vertex { position: [-0.5, 0.0, 0.0], color: COLOUR_CODES[Colours::White as usize] }, // C
+    Vertex { position: [-0.5, -0.5, 0.0], color: COLOUR_CODES[Colours::DarkRose as usize] }, // A
+
+    Vertex { position: [0.0, 0.5, 0.0], color: COLOUR_CODES[Colours::DarkOrange as usize] }, // E
+    Vertex { position: [-0.5, 0.0, 0.0], color: COLOUR_CODES[Colours::White as usize] }, // C
+    Vertex { position: [0.5, 0.0, 0.0], color: COLOUR_CODES[Colours::White as usize] }, // D
 ];
 
 impl Vertex {
