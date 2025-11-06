@@ -28,6 +28,12 @@ log = "0.4"
 console_log = "1.0"
 console_error_panic_hook = "0.1.6"
 
+# cherry-picking features to avoid multithreading, which WASM currently doesn't support
+[dependencies.image]
+version = "0.25.8"
+default-features = false
+features = ["png", "jpeg"]
+
 # wasm-pack doesn't enable bulk memory by default, must enable here
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['--enable-threads', '--enable-bulk-memory', '--all-features']
