@@ -1,7 +1,7 @@
 mod state;
 mod vertex;
 mod app;
-
+mod texture;
 
 use app::App;
 
