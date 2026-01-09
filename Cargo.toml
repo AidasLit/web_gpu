@@ -22,7 +22,7 @@ winit = { version = "0.30.0" }
 pollster = "0.4.0"
 bytemuck = { version = "1.24", features = [ "derive" ] }
 cgmath = "0.18"
-
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 # debug
 env_logger = "0.11.8"
@@ -39,3 +39,6 @@ features = ["png", "jpeg"]
 # wasm-pack doesn't enable bulk memory by default, must enable here
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['--enable-threads', '--enable-bulk-memory', '--all-features']
+
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']

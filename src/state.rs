@@ -4,15 +4,18 @@ use crate::vertex::{INDICES, VERTICES, Vertex};
 use crate::texture;
 use crate::camera::{Camera, CameraController, CameraUniform};
 
+use cgmath::num_traits::{abs};
 use wgpu::util::DeviceExt;
 use winit::{
     event_loop::{ActiveEventLoop}, keyboard::{KeyCode}, window::Window
 };
 
+use getrandom;
+
 use cgmath::prelude::*;
 
-const NUM_INSTANCES_PER_ROW: u32 = 10;
-const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(NUM_INSTANCES_PER_ROW as f32 * 0.5, 0.0, NUM_INSTANCES_PER_ROW as f32 * 0.5);
+const NUM_INSTANCES: u32 = 200;
+//const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(NUM_INSTANCES as f32 * 0.5, 0.0, NUM_INSTANCES as f32 * 0.5);
 
 struct Instance {
     position: cgmath::Vector3<f32>,
@@ -274,7 +277,8 @@ impl State {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
+                //cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None,
                 polygon_mode: wgpu::PolygonMode::Fill,
                 unclipped_depth: false,
                 conservative: false,
@@ -309,25 +313,32 @@ impl State {
 
         // INSTANCING
 
-        let instances = (0..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-            (0..NUM_INSTANCES_PER_ROW).map(move |x| {
-                let position = cgmath::Vector3 { x: x as f32, y: 0.0, z: z as f32 } - INSTANCE_DISPLACEMENT;
+        let instances = (0..NUM_INSTANCES).map(|i| {
+            // random position between -10 to 10 in each horizontal axis
+            let rand_x = (getrandom::u32().unwrap() % 200) as f32 / 10.0 - 10.0;
+            let rand_y = (getrandom::u32().unwrap() % 200) as f32 / 10.0 - 10.0;
+            let rand_len = (getrandom::u32().unwrap() % 200) as f32 / 10.0;
+            let rand_position = cgmath::Vector3 { x: rand_x as f32, y: 0.0, z: rand_y as f32 };
+            // random rotation
+            let rand_rot = getrandom::u32().unwrap() % 360;
 
-                let rotation = if position.is_zero() {
-                    // this is needed so an object at (0, 0, 0) won't get scaled to zero
-                    // as Quaternions can affect scale if they're not created correctly
-                    cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_z(), cgmath::Deg(0.0))
-                } else {
-                    cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0))
-                };
+            let position = rand_position.normalize_to(rand_len);
 
-                Instance {
-                    position, rotation,
-                }
-            })
+            let rotation = if position.is_zero() {
+                // this is needed so an object at (0, 0, 0) won't get scaled to zero
+                // as Quaternions can affect scale if they're not created correctly
+                cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.0))
+            } else {
+                cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_y(), cgmath::Deg(rand_rot as f32))
+            };
+
+            Instance {
+                position, rotation,
+            }
         }).collect::<Vec<_>>();
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+
         let instance_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
@@ -335,8 +346,6 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             }
         );
-
-
 
         Ok(Self {
             surface,
