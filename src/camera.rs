@@ -32,6 +32,7 @@ impl Camera {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct CameraUniform {
+    // Cgmath cant use bytemuck directly, storing the matrix as a multidimentional array
     view_proj: [[f32; 4]; 4],
 }
 
@@ -118,7 +119,7 @@ impl CameraController {
 
         let right = forward_norm.cross(camera.up);
 
-        // Redo radius calc in case the up/ down is pressed.
+        // Redo the radius calculation in case up or down is pressed.
         let forward = camera.target - camera.eye;
         let forward_mag = forward.magnitude();
 
