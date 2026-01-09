@@ -20,13 +20,16 @@ pub struct App {
 impl App {
     pub fn new(event_loop: &EventLoop<State>) -> Self {
         let proxy = Some(event_loop.create_proxy());
-        Self { state: None, proxy }
+        Self {
+            state: None,
+            proxy,
+        }
     }
 }
 
 impl ApplicationHandler<State> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        //#[allow(unused_mut)]
+        #[allow(unused_mut)]
         let mut window_attributes = Window::default_attributes();
 
         use wasm_bindgen::JsCast;
@@ -42,26 +45,21 @@ impl ApplicationHandler<State> for App {
 
         let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
 
-        // Run the future asynchronously and use the
-        // proxy to send the results to the event loop
         if let Some(proxy) = self.proxy.take() {
             wasm_bindgen_futures::spawn_local(async move {
-                assert!(
-                    proxy
-                        .send_event(
-                            State::new(window)
-                                .await
-                                .expect("Unable to create canvas!!!")
-                        )
-                        .is_ok()
-                )
+                assert!(proxy
+                    .send_event(
+                        State::new(window)
+                            .await
+                            .expect("Unable to create canvas!!!")
+                    )
+                    .is_ok())
             });
         }
     }
 
     #[allow(unused_mut)]
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, mut event: State) {
-        // This is where proxy.send_event() ends up
         event.window.request_redraw();
         event.resize(
             event.window.inner_size().width,
@@ -88,6 +86,7 @@ impl ApplicationHandler<State> for App {
                 state.update();
                 match state.render() {
                     Ok(_) => {}
+                    // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
                         let size = state.window.inner_size();
                         state.resize(size.width, size.height);
@@ -97,15 +96,20 @@ impl ApplicationHandler<State> for App {
                     }
                 }
             }
+            WindowEvent::MouseInput { state, button, .. } => match (button, state.is_pressed()) {
+                (MouseButton::Left, true) => {}
+                (MouseButton::Left, false) => {}
+                _ => {}
+            },
             WindowEvent::KeyboardInput {
                 event:
                     KeyEvent {
-                        physical_key: PhysicalKey::Code(key_code),
+                        physical_key: PhysicalKey::Code(code),
                         state: key_state,
                         ..
                     },
                 ..
-            } => state.handle_key(event_loop, key_code, key_state.is_pressed()),
+            } => state.handle_key(event_loop, code, key_state.is_pressed()),
             _ => {}
         }
     }

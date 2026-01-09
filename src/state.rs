@@ -1,15 +1,15 @@
-use crate::camera::{Camera, CameraUniform, CameraController};
-use crate::texture::Texture;
-use crate::vertex::{INDICES, VERTICES, Vertex};
-
 use std::{iter, sync::Arc};
 
-use wgpu::util::DeviceExt;
-use winit::{event_loop::ActiveEventLoop, keyboard::KeyCode, window::Window};
+use crate::vertex::{INDICES, VERTICES, Vertex};
+use crate::texture;
+use crate::camera::{Camera, CameraController, CameraUniform};
 
-// This will store the state of our game
+use wgpu::util::DeviceExt;
+use winit::{
+    event_loop::{ActiveEventLoop}, keyboard::{KeyCode}, window::Window
+};
+
 pub struct State {
-    pub window: Arc<Window>,
     pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -18,26 +18,22 @@ pub struct State {
     pub render_pipeline: wgpu::RenderPipeline,
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
-    pub index_count: u32,
+    pub num_indices: u32,
+    pub diffuse_texture: texture::Texture,
     pub diffuse_bind_group: wgpu::BindGroup,
-    pub diffuse_texture: Texture,
     pub camera: Camera,
+    pub camera_controller: CameraController,
     pub camera_uniform: CameraUniform,
     pub camera_buffer: wgpu::Buffer,
     pub camera_bind_group: wgpu::BindGroup,
-    pub camera_controller: CameraController,
+    pub window: Arc<Window>,
 }
 
 impl State {
     pub async fn new(window: Arc<Window>) -> anyhow::Result<State> {
         let size = window.inner_size();
 
-        // The instance is a handle to our GPU
-        // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            #[cfg(not(target_arch = "wasm32"))]
-            backends: wgpu::Backends::PRIMARY,
-            #[cfg(target_arch = "wasm32")]
             backends: wgpu::Backends::GL,
             ..Default::default()
         });
@@ -57,13 +53,7 @@ impl State {
                 label: None,
                 required_features: wgpu::Features::empty(),
                 experimental_features: wgpu::ExperimentalFeatures::disabled(),
-                // WebGL doesn't support all of wgpu's features, so if
-                // we're building for the web we'll have to disable some.
-                required_limits: if cfg!(target_arch = "wasm32") {
-                    wgpu::Limits::downlevel_webgl2_defaults()
-                } else {
-                    wgpu::Limits::default()
-                },
+                required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
                 memory_hints: Default::default(),
                 trace: wgpu::Trace::Off, // Trace path
             })
@@ -71,9 +61,6 @@ impl State {
             .unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        // Shader code in this tutorial assumes an Srgb surface texture. Using a different
-        // one will result all the colors comming out darker. If you want to support non
-        // Srgb surfaces, you'll need to account for that when drawing to the frame.
         let surface_format = surface_caps
             .formats
             .iter()
@@ -93,7 +80,7 @@ impl State {
 
         let diffuse_bytes = include_bytes!("textures/cat_stare.png");
         let diffuse_texture =
-            Texture::from_bytes(&device, &queue, diffuse_bytes, "textures/cat_stare.png").unwrap();
+            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "textures/cat_stare.png").unwrap();
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -247,7 +234,7 @@ impl State {
             contents: bytemuck::cast_slice(INDICES),
             usage: wgpu::BufferUsages::INDEX,
         });
-        let index_count = INDICES.len() as u32;
+        let num_indices = INDICES.len() as u32;
 
         Ok(Self {
             surface,
@@ -258,7 +245,7 @@ impl State {
             render_pipeline,
             vertex_buffer,
             index_buffer,
-            index_count,
+            num_indices,
             diffuse_texture,
             diffuse_bind_group,
             camera,
@@ -270,13 +257,27 @@ impl State {
         })
     }
 
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
 
     pub fn resize(&mut self, width: u32, height: u32) {
         if width > 0 && height > 0 {
+            self.is_surface_configured = true;
             self.config.width = width;
             self.config.height = height;
             self.surface.configure(&self.device, &self.config);
-            self.is_surface_configured = true;
+
+            self.camera.aspect = self.config.width as f32 / self.config.height as f32;
+        }
+    }
+
+    pub fn handle_key(&mut self, event_loop: &ActiveEventLoop, key: KeyCode, pressed: bool) {
+        match (key, pressed){
+            (KeyCode::Escape, true) => event_loop.exit(),
+            _ => {
+                self.camera_controller.handle_key(key, pressed);
+            }
         }
     }
 
@@ -289,7 +290,6 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         self.window.request_redraw();
@@ -338,21 +338,12 @@ impl State {
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.index_count, 0, 0..1);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
 
         self.queue.submit(iter::once(encoder.finish()));
         output.present();
 
         Ok(())
-    }
-
-    pub fn handle_key(&mut self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
-        match (code, is_pressed) {
-            (KeyCode::Escape, true) => event_loop.exit(),
-            _ => {
-                self.camera_controller.handle_key(code, is_pressed);
-            }
-        }
     }
 }

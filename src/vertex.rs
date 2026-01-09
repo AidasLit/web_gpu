@@ -2,29 +2,9 @@
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
+    pub position: [f32; 3],
+    pub tex_coords: [f32; 2],
 }
-
-pub const VERTICES: &[Vertex] = &[
-    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 1.0] },
-    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 1.0] },
-    Vertex { position: [-0.5, 0.0, 0.0], tex_coords: [0.0, 0.5] },
-    Vertex { position: [0.5, 0.0, 0.0], tex_coords: [1.0, 0.5] },
-    Vertex { position: [0.0, -0.5, 0.0], tex_coords: [0.5, 0.0] },
-];
-
-// 0 - 1
-// | / |
-// 2 - 3
-//  \ /
-//   4
-pub const INDICES: &[u16] = &[
-    1, 0, 2,
-    1, 2, 3,
-    2, 4, 3,
-    0,
-];
 
 impl Vertex {
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
@@ -47,3 +27,26 @@ impl Vertex {
         }
     }
 }
+
+// Vertexes:   textures:
+// -1;1  1;1    0;0 1;0
+// -1;-1 1;-1   0;1 1;1
+pub const VERTICES: &[Vertex] = &[
+    Vertex { position: [-0.5, 0.5, 0.0], tex_coords: [0.0, 0.0] },
+    Vertex { position: [0.5, 0.5, 0.0], tex_coords: [1.0, 0.0] },
+    Vertex { position: [-0.5, 0.0, 0.0], tex_coords: [0.0, 0.5] },
+    Vertex { position: [0.5, 0.0, 0.0], tex_coords: [1.0, 0.5] },
+    Vertex { position: [0.0, -0.5, 0.0], tex_coords: [0.5, 1.0] },
+];
+
+// 0 - 1
+// | / |
+// 2 - 3
+//  \ /
+//   4
+pub const INDICES: &[u16] = &[
+    1, 0, 2,
+    1, 2, 3,
+    2, 4, 3,
+    0,
+];
