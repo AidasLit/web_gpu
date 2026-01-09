@@ -1,0 +1,21 @@
+
+surface: Surface
+device: Device
+queue: Queue
+config: SurfaceConfiguration
+is_surface_configured: bool
+render_pipeline: RenderPipeline
+vertex_buffer: Buffer
+index_buffer: Buffer
+num_indices: u32
+diffuse_texture: Texture
+diffuse_bind_group: BindGroup
+camera: Camera
+camera_controller: CameraController
+camera_uniform: CameraUniform
+camera_buffer: Buffer
+camera_bind_group: BindGroup
+window: Arc<Window>
+instances: Vec<Instance>
+instance_buffer: Buffer
+depth_texture: Texture
