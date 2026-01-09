@@ -1,5 +1,3 @@
-// Vertex shader
-
 struct CameraUniform {
     view_proj: mat4x4<f32>,
 };
@@ -42,8 +40,6 @@ fn vs_main(
 
     return out;
 }
-
-// Fragment shader
 
 @group(0) @binding(0)
 var t_diffuse: texture_2d<f32>;

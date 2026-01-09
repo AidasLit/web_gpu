@@ -45,7 +45,7 @@ impl State {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::GL,
+            backends: wgpu::Backends::from_comma_list("webgpu,gl"),
             ..Default::default()
         });
 

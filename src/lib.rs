@@ -32,7 +32,7 @@ extern "C" {
 
 #[wasm_bindgen(start)]
 pub fn run_web() -> Result<(), wasm_bindgen::JsValue> {
-    alert("Hello, welcome to WebGPU rendering. Currently using WebGL backend");
+    alert("Hello, welcome to WebGPU rendering.\n\n Make sure the browser supports either WebGPU or WebGL.\n\n Colors will be noticably darker than they should be, if WegGPU is being used. WebGL colors are fine.");
 
     console_error_panic_hook::set_once();
     run().unwrap_throw();
