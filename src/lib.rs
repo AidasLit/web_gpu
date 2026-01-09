@@ -2,6 +2,7 @@ mod state;
 mod vertex;
 mod app;
 mod texture;
+mod camera;
 
 use app::App;
 

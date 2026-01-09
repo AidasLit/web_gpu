@@ -12,16 +12,29 @@
             margin: 0;
         }
 
+        div {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         canvas {
             background-color: black;
-            width: 90vw;
-            height: 90vh;
+            aspect-ratio: 16 / 9;
+            width: 80vw;
         }
     </style>
 </head>
 
 <body id="web_gpu">
-    <canvas id="canvas"></canvas>
+    <div>
+        <canvas id="canvas"></canvas>
+    </div>
     <script type="module">
         import init from "./pkg/web_gpu.js";
 
